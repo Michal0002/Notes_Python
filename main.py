@@ -4,7 +4,7 @@ import sqlite3
 app = Flask(__name__)
 
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
 def init_db():
@@ -13,7 +13,8 @@ def init_db():
     cursor.execute('''CREATE TABLE IF NOT EXISTS notes (
                         id INTEGER PRIMARY KEY,
                         title TEXT NOT NULL,
-                        content TEXT,
+                        content TEXT NOT NULL,
+                        priority TEXT NOT NULL, 
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )''')
     connection.commit()
@@ -22,14 +23,15 @@ def init_db():
 init_db()
 
 class Note:
-    def __init__(self,title,content):
+    def __init__(self,title,content, priority):
         self.title = title
         self.content = content
+        self.priority = priority
     
     def save(self):
         connection = sqlite3.connect('notes.db')
         cursor = connection.cursor()
-        cursor.execute('''INSERT INTO notes (title, content) VALUES (?, ?)''', (self.title, self.content))
+        cursor.execute('''INSERT INTO notes (title, content, priority) VALUES (?, ?, ?)''', (self.title, self.content, self.priority))
         connection.commit()
         connection.close()
 
@@ -41,17 +43,20 @@ class Note:
         connection.close()
         return notes
 
-@app.route('/add_note', methods=['POST'])
+@app.route('/add_note', methods=['GET', 'POST'])
 def add_note():
-    if 'title' in request.form and 'content' in request.form:
-        title = request.form['title']
-        content = request.form['content']
-        note = Note(title, content)
-        note.save()
-        return redirect('display_notes')
+    if request.method == 'POST':
+        if 'title' in request.form and 'content' in request.form:
+            title = request.form['title']
+            content = request.form['content']
+            priority = request.form['priority']        
+            note = Note(title, content, priority)
+            note.save()
+            return redirect('/display_notes')
+        else:
+            return "Error: Missing required data (title or note content)"
     else:
-        return "Error: Missing required data (title or note content)"
-
+        return render_template('add_note.html')
 
 @app.route('/display_notes')
 def display_notes():
@@ -67,4 +72,4 @@ def download_notes():
     return send_file('notes.txt', as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)   
+    app.run(debug=True)
