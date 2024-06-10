@@ -1,0 +1,18 @@
+<!-- display_notes.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notes</title>
+</head>
+<body>
+    <h1>Lista notatek</h1>
+    <ul>
+        {% for note in notes %}
+        <li><strong>{{ note[1] }}</strong>: {{ note[2] }}</li>
+        {% endfor %}
+    </ul>
+    <form action="/download_notes" method="POST">
+        <button type="submit">Pobierz notatki</button>
+    </form>
+</body>
+</html>
